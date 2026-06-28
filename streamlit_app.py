@@ -103,8 +103,16 @@ h1, h2, h3, h4 { color: #e6edf3; letter-spacing: -0.3px; }
     margin-bottom: 10px !important;
     margin-top: 0 !important;
 }
-/* Give every chart card extra bottom breathing room */
-.chart-card-spacer { margin-bottom: 8px; }
+
+/* ── Inner content padding wrapper ── */
+.card-inner {
+    padding: 6px 8px 10px 8px;
+}
+@media (min-width: 768px) {
+    .card-inner {
+        padding: 10px 14px 14px 14px;
+    }
+}
 
 /* ── Metric cards ── */
 [data-testid="stMetric"] {
@@ -388,14 +396,21 @@ cells_html = "".join(
 )
 
 with st.container(border=True):
-    st.markdown("<div class='eyebrow'>Live Readings</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='metric-grid'>{cells_html}</div>", unsafe_allow_html=True)
+    # ── added card-inner padding wrapper ──
+    st.markdown(
+        "<div class='eyebrow'>Live Readings</div>"
+        f"<div class='card-inner'><div class='metric-grid'>{cells_html}</div></div>",
+        unsafe_allow_html=True,
+    )
 
 # ─────────────────────────────────────────────
 # DETECTION HISTORY  (full width, then map below)
 # ─────────────────────────────────────────────
 with st.container(border=True):
     st.markdown("<div class='eyebrow'>Detection History</div>", unsafe_allow_html=True)
+
+    # ── card-inner wrapper for history content ──
+    st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
     if my_model and "is_vape" in df.columns:
         vape_rows = df[df["is_vape"] == 1].copy()
@@ -443,9 +458,12 @@ with st.container(border=True):
             unsafe_allow_html=True,
         )
 
+    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
+
     # ── Quick Stats ──
     st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>Quick Stats</div>", unsafe_allow_html=True)
+    st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
     if my_model and "is_vape" in df.columns:
         vape_qs = df[df["is_vape"] == 1].copy()
@@ -482,9 +500,12 @@ with st.container(border=True):
     else:
         st.markdown("<div style='color:#484f58;font-size:0.85rem'>Model offline — stats unavailable.</div>", unsafe_allow_html=True)
 
+    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
+
     # ── Hourly Heatmap ──
     st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>Hourly Detection Heatmap</div>", unsafe_allow_html=True)
+    st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
     if my_model and "is_vape" in df.columns and not df[df["is_vape"] == 1].empty:
         heat_df = df.copy()
@@ -533,9 +554,12 @@ with st.container(border=True):
             unsafe_allow_html=True,
         )
 
+    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
+
     # ── AI Insight ──
     st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>AI Insight</div>", unsafe_allow_html=True)
+    st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
     if my_model and "is_vape" in df.columns:
         vape_ai = df[df["is_vape"] == 1].copy()
@@ -578,6 +602,8 @@ with st.container(border=True):
         )
     else:
         st.markdown("<div style='color:#484f58;font-size:0.85rem'>Model offline — insight unavailable.</div>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
 
 # ─────────────────────────────────────────────
 # FACILITY MAP  (full width below)
@@ -625,7 +651,6 @@ with st.container(border=True):
     st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>Live Node Status</div>", unsafe_allow_html=True)
 
-    # 2-column grid for nodes on wider screens
     node_cols = st.columns(2)
     for i, (_, row) in enumerate(mock_sensors.iterrows()):
         pill = (
@@ -642,7 +667,7 @@ with st.container(border=True):
         )
 
 # ─────────────────────────────────────────────
-# TREND CHARTS
+# TREND CHARTS  — single card with tabs
 # ─────────────────────────────────────────────
 chart_data = df.sort_values("Sort_Time", ascending=True).copy()
 cutoff     = chart_data["Sort_Time"].max() - pd.Timedelta(hours=HOURS_BACK)
@@ -659,39 +684,37 @@ if my_model and "is_vape" in df.columns:
     )
     chart_data = chart_data.join(vape_overlay, how="left")
 
-st.markdown(
-    f"<div style='font-size:0.72rem;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;"
-    f"color:#6e7681;margin-bottom:10px;margin-top:4px;display:flex;align-items:center;gap:7px'>"
-    f"<span style='color:#3fb950;font-size:0.55rem'>●</span>"
-    f"Sensor Trends · Last {HOURS_BACK} Hours</div>",
-    unsafe_allow_html=True,
-)
+CHART_H = 260
 
-CHART_H = 260  # tall enough to touch-scrub comfortably
-
-cols_p = [c for c in ["PM2.5", "PM10", "MQ135"] if c in chart_data.columns]
-if "⚠ Vape Event" in chart_data.columns:
-    cols_p.append("⚠ Vape Event")
 with st.container(border=True):
-    st.markdown("<div class='eyebrow'>🟤 Particles</div>", unsafe_allow_html=True)
-    st.line_chart(chart_data[cols_p], height=CHART_H, use_container_width=True)
+    st.markdown(
+        f"<div class='eyebrow'>Sensor Trends · Last {HOURS_BACK} Hours</div>",
+        unsafe_allow_html=True,
+    )
 
-cols_a = [c for c in ["TVOC", "eCO2"] if c in chart_data.columns]
-if "⚠ Vape Event" in chart_data.columns:
-    cols_a.append("⚠ Vape Event")
-with st.container(border=True):
-    st.markdown("<div class='eyebrow'>🌫 Air Quality</div>", unsafe_allow_html=True)
-    st.line_chart(chart_data[cols_a], height=CHART_H, use_container_width=True)
+    tab_particles, tab_air, tab_climate, tab_all = st.tabs(
+        ["🟤 Particles", "🌫 Air Quality", "🌡 Climate", "📊 All Sensors"]
+    )
 
-cols_c = [c for c in ["Temp", "Humidity"] if c in chart_data.columns]
-with st.container(border=True):
-    st.markdown("<div class='eyebrow'>🌡 Climate</div>", unsafe_allow_html=True)
-    st.line_chart(chart_data[cols_c], height=CHART_H, use_container_width=True)
+    with tab_particles:
+        cols_p = [c for c in ["PM2.5", "PM10", "MQ135"] if c in chart_data.columns]
+        if "⚠ Vape Event" in chart_data.columns:
+            cols_p.append("⚠ Vape Event")
+        st.line_chart(chart_data[cols_p], height=CHART_H, use_container_width=True)
 
-display_cols = [c for c in FEATURE_COLS if c in chart_data.columns]
-with st.container(border=True):
-    st.markdown("<div class='eyebrow'>📊 All Sensors</div>", unsafe_allow_html=True)
-    st.line_chart(chart_data[display_cols], height=CHART_H, use_container_width=True)
+    with tab_air:
+        cols_a = [c for c in ["TVOC", "eCO2"] if c in chart_data.columns]
+        if "⚠ Vape Event" in chart_data.columns:
+            cols_a.append("⚠ Vape Event")
+        st.line_chart(chart_data[cols_a], height=CHART_H, use_container_width=True)
+
+    with tab_climate:
+        cols_c = [c for c in ["Temp", "Humidity"] if c in chart_data.columns]
+        st.line_chart(chart_data[cols_c], height=CHART_H, use_container_width=True)
+
+    with tab_all:
+        display_cols = [c for c in FEATURE_COLS if c in chart_data.columns]
+        st.line_chart(chart_data[display_cols], height=CHART_H, use_container_width=True)
 
 # ─────────────────────────────────────────────
 # FOOTER
