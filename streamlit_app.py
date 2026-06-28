@@ -36,10 +36,13 @@ st.set_page_config(page_title="Aurafarm", layout="wide")
 
 st.markdown("""
 <style>
-/* ── Viewport meta equivalent — ensure mobile scaling ── */
-html { -webkit-text-size-adjust: 100%; }
-
-/* ── Dark canvas ── */
+/* ══════════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════════ */
+html {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
 html, body, [data-testid="stAppViewContainer"] {
     background: #0d1117 !important;
     color: #c9d1d9;
@@ -47,13 +50,21 @@ html, body, [data-testid="stAppViewContainer"] {
 [data-testid="stHeader"]  { background: transparent !important; }
 [data-testid="stSidebar"] { background: #161b22 !important; }
 
-/* ── Block container — tight on mobile, roomy on desktop ── */
+/* ══════════════════════════════════════════
+   BLOCK CONTAINER — mobile-first
+══════════════════════════════════════════ */
 .block-container {
-    padding-top: 1.2rem !important;
-    padding-bottom: 2rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 3rem !important;
+    padding-left: 0.6rem !important;
+    padding-right: 0.6rem !important;
     max-width: 100% !important;
+}
+@media (min-width: 480px) {
+    .block-container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
 }
 @media (min-width: 768px) {
     .block-container {
@@ -62,72 +73,70 @@ html, body, [data-testid="stAppViewContainer"] {
     }
 }
 
-/* ── Typography ── */
+/* ══════════════════════════════════════════
+   TYPOGRAPHY
+══════════════════════════════════════════ */
 * { font-family: 'Inter', 'Segoe UI', sans-serif; }
 h1, h2, h3, h4 { color: #e6edf3; letter-spacing: -0.3px; }
 
-/* ── Eyebrow ── */
+/* ══════════════════════════════════════════
+   EYEBROW LABEL
+══════════════════════════════════════════ */
 .eyebrow {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 1.3px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
     color: #6e7681;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
 }
-.eyebrow::before { content: "●"; color: #3fb950; font-size: 0.55rem; }
+.eyebrow::before { content: "●"; color: #3fb950; font-size: 0.5rem; }
 
-/* ── Cards ── */
+/* ══════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════ */
 [data-testid="stVerticalBlockBorderWrapper"] {
     background: #161b22 !important;
     border: 1px solid #30363d !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
-    padding: 18px 16px !important;
-    margin-bottom: 16px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    padding: 14px 12px !important;
+    margin-bottom: 12px !important;
     margin-top: 4px !important;
     box-sizing: border-box !important;
+}
+@media (min-width: 480px) {
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        padding: 18px 16px !important;
+        border-radius: 14px !important;
+    }
 }
 @media (min-width: 768px) {
     [data-testid="stVerticalBlockBorderWrapper"] {
         padding: 24px 26px !important;
-        margin-bottom: 22px !important;
+        margin-bottom: 20px !important;
     }
 }
-/* Nested cards — no double shadow, tighter spacing */
+/* nested — no double shadow */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {
     box-shadow: none !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 8px !important;
     margin-top: 0 !important;
 }
 
-/* ── Inner content padding wrapper ── */
-.card-inner {
-    padding: 6px 8px 10px 8px;
-}
-@media (min-width: 768px) {
-    .card-inner {
-        padding: 10px 14px 14px 14px;
-    }
-}
+/* ── inner padding wrapper ── */
+.card-inner { padding: 4px 2px 8px 2px; }
+@media (min-width: 480px) { .card-inner { padding: 6px 6px 10px 6px; } }
+@media (min-width: 768px) { .card-inner { padding: 10px 12px 14px 12px; } }
 
-/* ── Metric cards ── */
-[data-testid="stMetric"] {
-    background: #0d1117;
-    border: 1px solid #21262d;
-    border-radius: 10px;
-    padding: 12px 14px;
-}
-[data-testid="stMetricLabel"] { color: #6e7681 !important; font-size: 0.68rem !important; font-weight: 600 !important; }
-[data-testid="stMetricValue"] { color: #e6edf3 !important; font-size: 1.2rem !important; }
-[data-testid="stMetricDelta"] { font-size: 0.72rem !important; }
-
-/* ── Hero title scales down on mobile ── */
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
 .hero-title {
-    font-size: clamp(2rem, 8vw, 3rem);
+    font-size: clamp(1.7rem, 9vw, 3rem);
     font-weight: 800;
     line-height: 1.1;
     color: #e6edf3;
@@ -135,116 +144,249 @@ h1, h2, h3, h4 { color: #e6edf3; letter-spacing: -0.3px; }
     text-align: center;
 }
 .hero-sub {
-    font-size: clamp(0.8rem, 3vw, 0.95rem);
+    font-size: clamp(0.75rem, 3.5vw, 0.95rem);
     color: #6e7681;
     text-align: center;
-    margin-top: 6px;
-    margin-bottom: 18px;
+    margin-top: 4px;
+    margin-bottom: 14px;
 }
 
-/* ── Status pill — shrinks on small screens ── */
+/* ── Status pill — fully fluid ── */
+.pill-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px;
+}
 .status-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 12px 28px;
-    width: auto;
-    max-width: 100%;
+    gap: 6px;
+    padding: 10px 20px;
     border-radius: 999px;
     font-weight: 700;
-    font-size: clamp(0.85rem, 4vw, 1.1rem);
+    font-size: clamp(0.8rem, 4vw, 1.05rem);
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     box-sizing: border-box;
 }
-.status-vape    { background:rgba(248,81,73,0.12);  border:1.5px solid rgba(248,81,73,0.5);  color:#ffa198; box-shadow:0 0 20px rgba(248,81,73,0.12); }
-.status-clean   { background:rgba(63,185,80,0.10);  border:1.5px solid rgba(63,185,80,0.4);  color:#56d364; box-shadow:0 0 20px rgba(63,185,80,0.10); }
+.status-vape    { background:rgba(248,81,73,0.12);  border:1.5px solid rgba(248,81,73,0.5);  color:#ffa198; box-shadow:0 0 18px rgba(248,81,73,0.12); }
+.status-clean   { background:rgba(63,185,80,0.10);  border:1.5px solid rgba(63,185,80,0.4);  color:#56d364; box-shadow:0 0 18px rgba(63,185,80,0.10); }
 .status-offline { background:rgba(110,118,129,0.10); border:1.5px solid #30363d; color:#6e7681; }
+.status-time    { color:#484f58; font-size:clamp(0.68rem,2.5vw,0.75rem); text-align:center; }
 
-/* ── Metric grid — 2 cols on mobile, 4 on tablet, 7 on desktop ── */
+/* ══════════════════════════════════════════
+   METRIC GRID — 2→4→7 columns
+══════════════════════════════════════════ */
 .metric-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
 }
-@media (min-width: 540px)  { .metric-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (min-width: 900px)  { .metric-grid { grid-template-columns: repeat(7, 1fr); } }
+@media (min-width: 480px) { .metric-grid { grid-template-columns: repeat(4, 1fr); gap: 7px; } }
+@media (min-width: 900px) { .metric-grid { grid-template-columns: repeat(7, 1fr); gap: 8px; } }
 
 .metric-cell {
     background: #0d1117;
     border: 1px solid #21262d;
-    border-radius: 10px;
-    padding: 12px 14px;
+    border-radius: 9px;
+    padding: 10px 10px 8px 10px;
+    min-width: 0;
 }
-.metric-label { font-size: 0.68rem; font-weight: 600; color: #6e7681; margin-bottom: 4px; }
-.metric-value { font-size: 1.15rem; font-weight: 700; color: #e6edf3; }
-.metric-delta-pos { font-size: 0.7rem; color: #56d364; }
-.metric-delta-neg { font-size: 0.7rem; color: #ffa198; }
-.metric-delta-neu { font-size: 0.7rem; color: #6e7681; }
+.metric-label {
+    font-size: clamp(0.58rem, 2vw, 0.68rem);
+    font-weight: 600;
+    color: #6e7681;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.metric-value {
+    font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+    font-weight: 700;
+    color: #e6edf3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.metric-delta-pos { font-size: 0.67rem; color: #56d364; }
+.metric-delta-neg { font-size: 0.67rem; color: #ffa198; }
+.metric-delta-neu { font-size: 0.67rem; color: #6e7681; }
 
-/* ── Quick stats grid — 2×2 on mobile, 4 col on desktop ── */
+/* ══════════════════════════════════════════
+   QUICK STATS — 2→4 columns
+══════════════════════════════════════════ */
 .qs-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 4px;
 }
-@media (min-width: 640px) { .qs-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 480px) { .qs-grid { grid-template-columns: repeat(4, 1fr); } }
 
 .qs-cell {
     background: #0d1117;
     border: 1px solid #21262d;
-    border-radius: 10px;
-    padding: 12px 14px;
+    border-radius: 9px;
+    padding: 10px 10px 8px 10px;
+    min-width: 0;
 }
-.qs-label { font-size: 0.65rem; font-weight: 600; color: #6e7681; margin-bottom: 4px; }
-.qs-value { font-size: 1.05rem; font-weight: 700; color: #e6edf3; }
+.qs-label {
+    font-size: clamp(0.58rem, 2vw, 0.65rem);
+    font-weight: 600;
+    color: #6e7681;
+    margin-bottom: 3px;
+}
+.qs-value {
+    font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+    font-weight: 700;
+    color: #e6edf3;
+}
 
-/* ── Tabs ── */
+/* ══════════════════════════════════════════
+   TABS — scrollable on narrow screens
+══════════════════════════════════════════ */
 .stTabs [data-baseweb="tab-list"] {
     background: #0d1117;
     border-radius: 10px;
-    gap: 4px;
-    padding: 4px;
+    gap: 3px;
+    padding: 3px;
     border: 1px solid #21262d;
-    flex-wrap: wrap;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
 }
-.stTabs [data-baseweb="tab"]     { background:transparent; color:#6e7681; border-radius:8px; font-size:0.82rem; }
-.stTabs [data-baseweb="tab"] p   { color:inherit !important; }
-.stTabs [aria-selected="true"]   { background:#21262d !important; color:#e6edf3 !important; }
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    color: #6e7681;
+    border-radius: 8px;
+    font-size: clamp(0.72rem, 2.5vw, 0.82rem);
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 6px 10px !important;
+}
+.stTabs [data-baseweb="tab"] p { color: inherit !important; }
+.stTabs [aria-selected="true"]  { background: #21262d !important; color: #e6edf3 !important; }
 
-/* ── Node cards ── */
+/* ══════════════════════════════════════════
+   NODE CARDS
+══════════════════════════════════════════ */
 .node-card {
     background: #0d1117;
     border: 1px solid #21262d;
     border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
+    padding: 10px 12px;
+    margin-bottom: 7px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.83rem;
+    gap: 8px;
+    font-size: clamp(0.75rem, 2.5vw, 0.83rem);
     color: #8b949e;
+    min-width: 0;
 }
-.pill-red   { color:#ffa198; font-weight:700; }
-.pill-green { color:#56d364; font-weight:700; }
-.pill-dot-red   { display:inline-block; width:7px; height:7px; border-radius:50%; background:#f85149; margin-right:5px; }
-.pill-dot-green { display:inline-block; width:7px; height:7px; border-radius:50%; background:#3fb950; margin-right:5px; }
+.node-info { min-width: 0; flex: 1; }
+.node-name {
+    color: #c9d1d9;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: clamp(0.78rem, 2.8vw, 0.85rem);
+}
+.node-loc {
+    color: #484f58;
+    font-size: clamp(0.65rem, 2.2vw, 0.75rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pill-red   { color:#ffa198; font-weight:700; white-space:nowrap; }
+.pill-green { color:#56d364; font-weight:700; white-space:nowrap; }
+.pill-dot-red   { display:inline-block; width:6px; height:6px; border-radius:50%; background:#f85149; margin-right:4px; flex-shrink:0; }
+.pill-dot-green { display:inline-block; width:6px; height:6px; border-radius:50%; background:#3fb950; margin-right:4px; flex-shrink:0; }
 
-/* ── Map legend ── */
-.map-legend { display:flex; gap:16px; margin-top:10px; font-size:0.78rem; color:#6e7681; flex-wrap:wrap; }
-.legend-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+/* ══════════════════════════════════════════
+   MAP LEGEND
+══════════════════════════════════════════ */
+.map-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+    font-size: clamp(0.68rem, 2.5vw, 0.78rem);
+    color: #6e7681;
+    flex-wrap: wrap;
+}
+.legend-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+}
 
-/* ── Heatmap — scrollable on very small screens ── */
-.heatmap-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.heatmap-inner { display:flex; gap:3px; min-width: 480px; }
+/* ══════════════════════════════════════════
+   HEATMAP — horizontally scrollable
+══════════════════════════════════════════ */
+.heatmap-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    /* hide scrollbar on iOS but keep scrollable */
+    scrollbar-width: none;
+}
+.heatmap-wrap::-webkit-scrollbar { display: none; }
+.heatmap-inner {
+    display: flex;
+    gap: 3px;
+    min-width: 520px; /* ensures all 24 cols visible on scroll */
+}
 
-/* ── Misc ── */
-hr { border-color:#21262d; }
-p, li { color:#8b949e; }
-[data-testid="stCaptionContainer"] { color:#484f58 !important; }
-[data-testid="stDataFrame"] { border-radius:10px; overflow:hidden; }
-.stAlert { border-radius:10px; }
+/* ══════════════════════════════════════════
+   DATAFRAME
+══════════════════════════════════════════ */
+[data-testid="stDataFrame"] {
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: clamp(0.7rem, 2vw, 0.85rem) !important;
+}
+
+/* ══════════════════════════════════════════
+   MISC
+══════════════════════════════════════════ */
+hr { border-color: #21262d; }
+p, li { color: #8b949e; font-size: clamp(0.8rem, 2.5vw, 0.9rem); }
+[data-testid="stCaptionContainer"] { color: #484f58 !important; font-size: 0.7rem !important; }
+.stAlert { border-radius: 10px; }
+
+/* ── touch target: make buttons finger-friendly ── */
+button, [role="button"] { min-height: 40px !important; }
+
+/* ── AI insight box ── */
+.insight-box {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-left: 3px solid #3fb950;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: clamp(0.78rem, 2.5vw, 0.87rem);
+    color: #8b949e;
+    line-height: 1.75;
+}
+
+/* ── section divider inside cards ── */
+.card-divider {
+    border: none;
+    border-top: 1px solid #21262d;
+    margin: 16px 0 14px 0;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -338,30 +480,34 @@ with st.container(border=True):
 
     if prediction is None:
         st.markdown(
-            "<div style='text-align:center'><span class='status-pill status-offline'>⚠️ Detection Offline</span></div>",
+            "<div class='pill-wrap'>"
+            "<span class='status-pill status-offline'>⚠️ Detection Offline</span>"
+            "</div>",
             unsafe_allow_html=True,
         )
     elif prediction == 1:
         conf_str = f" · {confidence:.0f}%" if confidence else ""
+        ts = latest['Display_Time'].strftime('%H:%M:%S')
         st.markdown(
-            f"<div style='text-align:center'>"
-            f"<span class='status-pill status-vape'>🚨 Vape Detected{conf_str}</span><br>"
-            f"<span style='color:#484f58;font-size:0.75rem'>as of {latest['Display_Time'].strftime('%H:%M:%S')}</span>"
+            f"<div class='pill-wrap'>"
+            f"<span class='status-pill status-vape'>🚨 Vape Detected{conf_str}</span>"
+            f"<span class='status-time'>as of {ts}</span>"
             f"</div>",
             unsafe_allow_html=True,
         )
     else:
         conf_str = f" · {confidence:.0f}%" if confidence else ""
+        ts = latest['Display_Time'].strftime('%H:%M:%S')
         st.markdown(
-            f"<div style='text-align:center'>"
-            f"<span class='status-pill status-clean'>✅ Air Quality Clean{conf_str}</span><br>"
-            f"<span style='color:#484f58;font-size:0.75rem'>as of {latest['Display_Time'].strftime('%H:%M:%S')}</span>"
+            f"<div class='pill-wrap'>"
+            f"<span class='status-pill status-clean'>✅ Air Quality Clean{conf_str}</span>"
+            f"<span class='status-time'>as of {ts}</span>"
             f"</div>",
             unsafe_allow_html=True,
         )
 
 # ─────────────────────────────────────────────
-# METRIC CARDS  (custom HTML grid, wraps on mobile)
+# METRIC CARDS
 # ─────────────────────────────────────────────
 def fmt_delta(col, inverse=False):
     try:
@@ -396,7 +542,6 @@ cells_html = "".join(
 )
 
 with st.container(border=True):
-    # ── added card-inner padding wrapper ──
     st.markdown(
         "<div class='eyebrow'>Live Readings</div>"
         f"<div class='card-inner'><div class='metric-grid'>{cells_html}</div></div>",
@@ -404,23 +549,19 @@ with st.container(border=True):
     )
 
 # ─────────────────────────────────────────────
-# DETECTION HISTORY  (full width, then map below)
+# DETECTION HISTORY
 # ─────────────────────────────────────────────
 with st.container(border=True):
     st.markdown("<div class='eyebrow'>Detection History</div>", unsafe_allow_html=True)
-
-    # ── card-inner wrapper for history content ──
     st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
     if my_model and "is_vape" in df.columns:
         vape_rows = df[df["is_vape"] == 1].copy()
-
         if not vape_rows.empty:
             vape_rows = vape_rows.sort_values("Display_Time")
             vape_rows["block"] = (
                 vape_rows["Display_Time"].diff() > pd.Timedelta(minutes=5)
             ).cumsum()
-
             event_rows = []
             for _, grp in vape_rows.groupby("block"):
                 event_rows.append({
@@ -431,7 +572,6 @@ with st.container(border=True):
                     "Peak TVOC":  f"{grp['TVOC'].max():.0f} ppb",
                     "Peak PM2.5": f"{grp['PM2.5'].max():.1f} μg/m³",
                 })
-
             events_df = pd.DataFrame(event_rows[::-1])
             st.dataframe(
                 events_df, use_container_width=True, hide_index=True,
@@ -447,21 +587,21 @@ with st.container(border=True):
             st.caption(f"{len(events_df)} detection event(s) in available data.")
         else:
             st.markdown(
-                "<div style='color:#484f58;padding:24px 0;text-align:center;font-size:0.85rem'>"
+                "<div style='color:#484f58;padding:20px 0;text-align:center;font-size:0.83rem'>"
                 "No vape events detected in the available data.</div>",
                 unsafe_allow_html=True,
             )
     else:
         st.markdown(
-            "<div style='color:#484f58;padding:24px 0;text-align:center;font-size:0.85rem'>"
+            "<div style='color:#484f58;padding:20px 0;text-align:center;font-size:0.83rem'>"
             "Detection system offline — history unavailable.</div>",
             unsafe_allow_html=True,
         )
 
-    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Quick Stats ──
-    st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
+    st.markdown("<hr class='card-divider'>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>Quick Stats</div>", unsafe_allow_html=True)
     st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
@@ -498,12 +638,12 @@ with st.container(border=True):
         )
         st.markdown(f"<div class='qs-grid'>{qs_cells}</div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div style='color:#484f58;font-size:0.85rem'>Model offline — stats unavailable.</div>", unsafe_allow_html=True)
+        st.markdown("<div style='color:#484f58;font-size:0.83rem'>Model offline — stats unavailable.</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Hourly Heatmap ──
-    st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
+    st.markdown("<hr class='card-divider'>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>Hourly Detection Heatmap</div>", unsafe_allow_html=True)
     st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
@@ -535,29 +675,29 @@ with st.container(border=True):
             count_disp = str(count) if count > 0 else "·"
             cells += (
                 f"<div style='display:flex;flex-direction:column;align-items:center;"
-                f"background:{bg};border:1px solid {border};border-radius:6px;"
-                f"padding:6px 4px;flex:1;min-width:16px'>"
-                f"<span style='font-size:0.55rem;color:#6e7681;line-height:1'>{h:02d}</span>"
-                f"<span style='font-size:0.7rem;font-weight:700;color:{txt_color};line-height:1.4'>{count_disp}</span>"
+                f"background:{bg};border:1px solid {border};border-radius:5px;"
+                f"padding:5px 3px;flex:1;min-width:14px'>"
+                f"<span style='font-size:0.5rem;color:#6e7681;line-height:1'>{h:02d}</span>"
+                f"<span style='font-size:0.65rem;font-weight:700;color:{txt_color};line-height:1.4'>{count_disp}</span>"
                 f"</div>"
             )
 
         st.markdown(
             f"<div class='heatmap-wrap'><div class='heatmap-inner'>{cells}</div></div>"
-            f"<div style='font-size:0.7rem;color:#484f58;margin-top:6px'>"
-            f"Hour (00–23) · colour = intensity · number = readings</div>",
+            f"<div style='font-size:0.65rem;color:#484f58;margin-top:5px'>"
+            f"Swipe to see all hours · colour = intensity · number = readings</div>",
             unsafe_allow_html=True,
         )
     else:
         st.markdown(
-            "<div style='color:#484f58;font-size:0.85rem;padding:8px 0'>No detection data to build heatmap.</div>",
+            "<div style='color:#484f58;font-size:0.83rem;padding:6px 0'>No detection data to build heatmap.</div>",
             unsafe_allow_html=True,
         )
 
-    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # ── AI Insight ──
-    st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
+    st.markdown("<hr class='card-divider'>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>AI Insight</div>", unsafe_allow_html=True)
     st.markdown("<div class='card-inner'>", unsafe_allow_html=True)
 
@@ -574,7 +714,6 @@ with st.container(border=True):
             top_hour_str  = f"{top_hour:02d}:00–{top_hour+1:02d}:00"
             avg_tvoc_clean = df[df["is_vape"] == 0]["TVOC"].mean()
             tvoc_spike_pct = ((peak_tvoc_val - avg_tvoc_clean) / max(avg_tvoc_clean, 1)) * 100
-
             freq_note = (
                 "A single vaping event has been recorded." if n_events == 1
                 else f"{n_events} vaping events detected — low but worth monitoring." if n_events <= 3
@@ -594,19 +733,14 @@ with st.container(border=True):
         else:
             insight = "✅ No vaping events detected in available data. Air quality has remained within normal parameters across all sensors."
 
-        st.markdown(
-            f"<div style='background:#0d1117;border:1px solid #21262d;border-left:3px solid #3fb950;"
-            f"border-radius:8px;padding:14px 16px;font-size:0.87rem;color:#8b949e;line-height:1.75'>"
-            f"{insight}</div>",
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"<div class='insight-box'>{insight}</div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div style='color:#484f58;font-size:0.85rem'>Model offline — insight unavailable.</div>", unsafe_allow_html=True)
+        st.markdown("<div style='color:#484f58;font-size:0.83rem'>Model offline — insight unavailable.</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)  # close card-inner
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# FACILITY MAP  (full width below)
+# FACILITY MAP
 # ─────────────────────────────────────────────
 with st.container(border=True):
     st.markdown("<div class='eyebrow'>Facility Sensor Network</div>", unsafe_allow_html=True)
@@ -636,7 +770,7 @@ with st.container(border=True):
             map_style="dark",
             tooltip={"text": "{sensor_id} — {location}\nStatus: {status_text}"},
         ),
-        height=300,
+        height=260,
         use_container_width=True,
     )
 
@@ -648,10 +782,11 @@ with st.container(border=True):
         unsafe_allow_html=True,
     )
 
-    st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
+    st.markdown("<hr class='card-divider'>", unsafe_allow_html=True)
     st.markdown("<div class='eyebrow'>Live Node Status</div>", unsafe_allow_html=True)
 
-    node_cols = st.columns(2)
+    # single-column on phone, two-column on tablet+
+    node_cols = st.columns([1, 1])
     for i, (_, row) in enumerate(mock_sensors.iterrows()):
         pill = (
             "<span class='pill-red'><span class='pill-dot-red'></span>Vape Detected</span>"
@@ -660,14 +795,16 @@ with st.container(border=True):
         )
         node_cols[i % 2].markdown(
             f"<div class='node-card'>"
-            f"<div><b style='color:#c9d1d9'>{row['sensor_id']}</b>"
-            f"<span style='color:#484f58;margin-left:8px;font-size:0.78rem'>{row['location']}</span></div>"
+            f"<div class='node-info'>"
+            f"<div class='node-name'>{row['sensor_id']}</div>"
+            f"<div class='node-loc'>{row['location']}</div>"
+            f"</div>"
             f"{pill}</div>",
             unsafe_allow_html=True,
         )
 
 # ─────────────────────────────────────────────
-# TREND CHARTS  — single card with tabs
+# TREND CHARTS — tabbed, single card
 # ─────────────────────────────────────────────
 chart_data = df.sort_values("Sort_Time", ascending=True).copy()
 cutoff     = chart_data["Sort_Time"].max() - pd.Timedelta(hours=HOURS_BACK)
@@ -684,7 +821,7 @@ if my_model and "is_vape" in df.columns:
     )
     chart_data = chart_data.join(vape_overlay, how="left")
 
-CHART_H = 260
+CHART_H = 220  # slightly shorter on mobile
 
 with st.container(border=True):
     st.markdown(
@@ -693,7 +830,7 @@ with st.container(border=True):
     )
 
     tab_particles, tab_air, tab_climate, tab_all = st.tabs(
-        ["🟤 Particles", "🌫 Air Quality", "🌡 Climate", "📊 All Sensors"]
+        ["🟤 Particles", "🌫 Air Quality", "🌡 Climate", "📊 All"]
     )
 
     with tab_particles:
@@ -720,7 +857,7 @@ with st.container(border=True):
 # FOOTER
 # ─────────────────────────────────────────────
 st.markdown(
-    "<div style='text-align:center;color:#484f58;font-size:0.72rem;padding:8px 0'>"
+    "<div style='text-align:center;color:#484f58;font-size:0.68rem;padding:6px 0 2px 0'>"
     "Aurafarm · Auto-refreshes every 30 s · Sensor data via Google Sheets"
     "</div>",
     unsafe_allow_html=True,
