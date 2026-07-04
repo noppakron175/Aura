@@ -10,7 +10,7 @@ from datetime import datetime
 # Publish your Google Sheet to the web as CSV:
 # File -> Share -> Publish to web -> choose the sheet -> CSV -> Publish
 # Paste the resulting URL below.
-SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:csv&sheet=Sheet1"
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZNu4qCrSzDhUuSiaexw6ch64O1tbUdbVsyzdb9j0Jsn_ch9qpIQdPADNEQMWKm7t7g_As8RJ1Qxpa/pub?gid=0&single=true&output=csv"
 
 REFRESH_SECONDS = 60  # auto-refresh interval
 
