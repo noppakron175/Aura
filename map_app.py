@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pydeck as pdk
-from datetime import datetime
 
 # ============================================================
 # CONFIG — EDIT THIS
@@ -10,18 +9,18 @@ from datetime import datetime
 # Publish your Google Sheet to the web as CSV:
 # File -> Share -> Publish to web -> choose the sheet -> CSV -> Publish
 # Paste the resulting URL below.
-SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZNu4qCrSzDhUuSiaexw6ch64O1tbUdbVsyzdb9j0Jsn_ch9qpIQdPADNEQMWKm7t7g_As8RJ1Qxpa/pub?gid=0&single=true&output=csv"
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:csv&sheet=Sheet1"
 
 REFRESH_SECONDS = 60  # auto-refresh interval
+ALL_SENSOR_COLS = ["PM2.5", "PM10", "TVOC", "MQ135", "MQ7", "HP0", "HP3"]
 
 st.set_page_config(
     page_title="Air Quality Map",
     page_icon="🌫️",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
-# zero-dependency auto refresh (same trick as Aurafarm)
 st.markdown(f"<meta http-equiv='refresh' content='{REFRESH_SECONDS}'>", unsafe_allow_html=True)
 
 # ============================================================
@@ -31,17 +30,18 @@ st.markdown("""
 <style>
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     .metric-card {
-        background: #1a1d24; border-radius: 12px; padding: 16px;
+        background: #1a1d24; border-radius: 12px; padding: 12px;
         text-align: center; border: 1px solid #2a2d34;
     }
-    .metric-card h3 { margin: 0; font-size: 0.85rem; color: #9aa0a6; font-weight: 500; }
-    .metric-card p { margin: 4px 0 0 0; font-size: 1.8rem; font-weight: 700; }
-    .aqi-badge {
-        display: inline-block; padding: 2px 10px; border-radius: 20px;
-        font-size: 0.75rem; font-weight: 600; color: #000;
+    .metric-card h3 { margin: 0; font-size: 0.75rem; color: #9aa0a6; font-weight: 500; }
+    .metric-card p { margin: 4px 0 0 0; font-size: 1.4rem; font-weight: 700; }
+    .station-card {
+        background: #1a1d24; border-radius: 10px; padding: 10px 12px;
+        border: 1px solid #2a2d34; margin-bottom: 8px;
     }
-    @media (max-width: 640px) {
-        .metric-card p { font-size: 1.3rem; }
+    section[data-testid="stSidebar"] { background-color: #12151c; }
+    div[data-testid="stVerticalBlock"] div[data-testid="stButton"] button {
+        width: 100%; text-align: left; border-radius: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -54,7 +54,7 @@ def load_data(url: str) -> pd.DataFrame:
     df = pd.read_csv(url)
     df.columns = [c.strip() for c in df.columns]
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
-    for col in ["LAT", "LON", "TVOC", "HP0", "HP3", "MQ135", "MQ7", "PM2.5", "PM10"]:
+    for col in ["LAT", "LON"] + ALL_SENSOR_COLS:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
     df = df.dropna(subset=["LAT", "LON", "Timestamp"])
@@ -72,12 +72,13 @@ def load_demo_data() -> pd.DataFrame:
     ]
     rows = []
     now = pd.Timestamp.now()
-    for lat, lon, _name in stations:
+    for lat, lon, name in stations:
         for i in range(5):
             rows.append({
                 "Timestamp": now - pd.Timedelta(minutes=10 * i),
                 "LAT": lat + rng.normal(0, 0.001),
                 "LON": lon + rng.normal(0, 0.001),
+                "StationName": name,
                 "TVOC": rng.uniform(50, 800),
                 "HP0": rng.uniform(0.8, 1.5),
                 "HP3": rng.uniform(0.8, 1.5),
@@ -98,6 +99,9 @@ except Exception:
 
 if using_demo:
     df = load_demo_data()
+
+if "StationName" not in df.columns:
+    df["StationName"] = None
 
 # ============================================================
 # AQI SCORING (PM2.5-driven, US EPA-style breakpoints)
@@ -128,20 +132,81 @@ def aqi_bucket(aqi):
         return "Hazardous", [126, 0, 35]
 
 
-# latest reading per station (unique LAT/LON rounded to group same physical station)
 df["station_key"] = df["LAT"].round(4).astype(str) + "_" + df["LON"].round(4).astype(str)
 latest = df.sort_values("Timestamp").groupby("station_key").tail(1).copy()
 latest["AQI"] = latest["PM2.5"].apply(pm25_to_aqi)
 latest[["AQI_Label", "AQI_Color"]] = latest["AQI"].apply(lambda a: pd.Series(aqi_bucket(a)))
+latest["radius"] = 200 + latest["AQI"] * 4
+latest["DisplayName"] = latest.apply(
+    lambda r: r["StationName"] if pd.notna(r["StationName"]) and str(r["StationName"]).strip() else f"{r['LAT']:.4f}, {r['LON']:.4f}",
+    axis=1,
+)
+
+DEFAULT_ZOOM = 10.5
+STATION_ZOOM = 15
 
 # ============================================================
-# HEADER + STATUS
+# SESSION STATE FOR MAP VIEW
+# ============================================================
+if "map_lat" not in st.session_state:
+    st.session_state.map_lat = latest["LAT"].mean() if not latest.empty else 18.7
+    st.session_state.map_lon = latest["LON"].mean() if not latest.empty else 98.9
+    st.session_state.map_zoom = DEFAULT_ZOOM
+    st.session_state.selected_station = None
+
+
+def fly_to(station_key):
+    row = latest[latest["station_key"] == station_key].iloc[0]
+    st.session_state.map_lat = row["LAT"]
+    st.session_state.map_lon = row["LON"]
+    st.session_state.map_zoom = STATION_ZOOM
+    st.session_state.selected_station = station_key
+
+
+def reset_view():
+    st.session_state.map_lat = latest["LAT"].mean() if not latest.empty else 18.7
+    st.session_state.map_lon = latest["LON"].mean() if not latest.empty else 98.9
+    st.session_state.map_zoom = DEFAULT_ZOOM
+    st.session_state.selected_station = None
+
+# ============================================================
+# HEADER
 # ============================================================
 st.markdown("## 🌫️ Air Quality Map")
 if using_demo:
     st.warning("Showing demo data — paste your published Google Sheet CSV URL into `SHEET_CSV_URL` in app.py to go live.")
 else:
     st.caption(f"Live from Google Sheets · last row at {df['Timestamp'].max()}")
+
+# ============================================================
+# SIDEBAR: COLUMN SELECTOR + STATION LIST
+# ============================================================
+with st.sidebar:
+    st.markdown("### ⚙️ Columns to show")
+    selected_cols = st.multiselect(
+        "Sensor readings",
+        options=ALL_SENSOR_COLS,
+        default=["PM2.5", "PM10", "TVOC"],
+        label_visibility="collapsed",
+    )
+
+    st.markdown("---")
+    st.markdown("### 📍 Stations")
+    if st.button("🌍 Reset view (show all)", use_container_width=True):
+        reset_view()
+
+    for row in latest.sort_values("AQI", ascending=False).itertuples():
+        label, color = row.AQI_Label, row.AQI_Color
+        badge_color = f"rgb({color[0]},{color[1]},{color[2]})"
+        is_selected = st.session_state.selected_station == row.station_key
+        btn_label = f"{'📌 ' if is_selected else ''}{row.DisplayName} · AQI {row.AQI}"
+        if st.button(btn_label, key=f"btn_{row.station_key}", use_container_width=True):
+            fly_to(row.station_key)
+        st.markdown(
+            f"<div style='margin:-8px 0 10px 4px;font-size:0.75rem;'>"
+            f"<span style='color:{badge_color};'>●</span> {label}</div>",
+            unsafe_allow_html=True,
+        )
 
 # ============================================================
 # METRIC CARDS
@@ -153,8 +218,7 @@ with c2:
     avg_aqi = round(latest["AQI"].mean()) if not latest.empty else 0
     st.markdown(f"""<div class="metric-card"><h3>AVG AQI</h3><p>{avg_aqi}</p></div>""", unsafe_allow_html=True)
 with c3:
-    worst = latest.loc[latest["AQI"].idxmax()] if not latest.empty else None
-    worst_val = int(worst["AQI"]) if worst is not None else 0
+    worst_val = int(latest["AQI"].max()) if not latest.empty else 0
     st.markdown(f"""<div class="metric-card"><h3>WORST AQI</h3><p>{worst_val}</p></div>""", unsafe_allow_html=True)
 with c4:
     avg_pm25 = round(latest["PM2.5"].mean(), 1) if not latest.empty else 0
@@ -163,17 +227,15 @@ with c4:
 st.write("")
 
 # ============================================================
-# MAP
+# MAP (main focus — large)
 # ============================================================
 if not latest.empty:
     view_state = pdk.ViewState(
-        latitude=latest["LAT"].mean(),
-        longitude=latest["LON"].mean(),
-        zoom=10,
+        latitude=st.session_state.map_lat,
+        longitude=st.session_state.map_lon,
+        zoom=st.session_state.map_zoom,
         pitch=0,
     )
-
-    latest["radius"] = 200 + latest["AQI"] * 4
 
     layer = pdk.Layer(
         "ScatterplotLayer",
@@ -182,61 +244,72 @@ if not latest.empty:
         get_fill_color="AQI_Color",
         get_radius="radius",
         pickable=True,
-        opacity=0.8,
+        opacity=0.85,
         stroked=True,
         get_line_color=[255, 255, 255],
         line_width_min_pixels=1,
     )
 
+    label_layer = pdk.Layer(
+        "TextLayer",
+        data=latest,
+        get_position=["LON", "LAT"],
+        get_text="DisplayName",
+        get_size=14,
+        get_color=[255, 255, 255],
+        get_alignment_baseline="'bottom'",
+        get_pixel_offset=[0, -18],
+    )
+
+    # build tooltip dynamically from selected columns only
+    tooltip_lines = "<b>{DisplayName}</b><br/><b>AQI: {AQI} ({AQI_Label})</b><br/>"
+    for col in selected_cols:
+        safe = col.replace(".", "\\.")
+        tooltip_lines += f"{col}: {{{col}}}<br/>"
+    tooltip_lines += "Updated: {Timestamp}"
+
     tooltip = {
-        "html": """
-        <b>AQI: {AQI} ({AQI_Label})</b><br/>
-        PM2.5: {PM2.5} µg/m³<br/>
-        PM10: {PM10} µg/m³<br/>
-        TVOC: {TVOC} ppb<br/>
-        MQ135: {MQ135}<br/>
-        MQ7: {MQ7}<br/>
-        Updated: {Timestamp}
-        """,
-        "style": {"backgroundColor": "#1a1d24", "color": "white"}
+        "html": tooltip_lines,
+        "style": {"backgroundColor": "#1a1d24", "color": "white"},
     }
 
-    st.pydeck_chart(pdk.Deck(
-        map_style="dark",
-        initial_view_state=view_state,
-        layers=[layer],
-        tooltip=tooltip,
-    ))
+    st.pydeck_chart(
+        pdk.Deck(
+            map_style="dark",
+            initial_view_state=view_state,
+            layers=[layer, label_layer],
+            tooltip=tooltip,
+        ),
+        use_container_width=True,
+        height=560,
+    )
 else:
     st.info("No station data available yet.")
 
 # ============================================================
-# TREND CHARTS
+# SELECTED SENSOR DATA (only chosen columns)
 # ============================================================
-st.markdown("### 📈 Trends")
-tab1, tab2, tab3 = st.tabs(["PM2.5 / PM10", "TVOC", "MQ135 / MQ7"])
-
-station_options = latest["station_key"].tolist() if not latest.empty else []
-station_names = {row.station_key: f"{row.LAT:.4f}, {row.LON:.4f}" for row in latest.itertuples()}
-
-with tab1:
-    chart_df = df.pivot_table(index="Timestamp", columns="station_key", values="PM2.5")
-    st.line_chart(chart_df)
-with tab2:
-    chart_df = df.pivot_table(index="Timestamp", columns="station_key", values="TVOC")
-    st.line_chart(chart_df)
-with tab3:
-    c1, c2 = st.columns(2)
-    with c1:
-        st.caption("MQ135 (general air quality)")
-        st.line_chart(df.pivot_table(index="Timestamp", columns="station_key", values="MQ135"))
-    with c2:
-        st.caption("MQ7 (CO)")
-        st.line_chart(df.pivot_table(index="Timestamp", columns="station_key", values="MQ7"))
+st.markdown("### 📋 Station Readings")
+display_cols = ["DisplayName", "Timestamp"] + selected_cols + ["AQI", "AQI_Label"]
+display_cols = [c for c in display_cols if c in latest.columns]
+st.dataframe(
+    latest[display_cols].sort_values("AQI", ascending=False),
+    use_container_width=True,
+    hide_index=True,
+)
 
 # ============================================================
-# STATION TABLE
+# TRENDS (only for selected columns)
 # ============================================================
-st.markdown("### 📋 Station Details")
-display_cols = ["Timestamp", "LAT", "LON", "PM2.5", "PM10", "TVOC", "MQ135", "MQ7", "HP0", "HP3", "AQI", "AQI_Label"]
-st.dataframe(latest[display_cols].sort_values("AQI", ascending=False), use_container_width=True, hide_index=True)
+if selected_cols:
+    st.markdown("### 📈 Trends")
+    tabs = st.tabs(selected_cols)
+    for tab, col in zip(tabs, selected_cols):
+        with tab:
+            chart_df = df.pivot_table(index="Timestamp", columns="station_key", values=col)
+            chart_df.columns = [
+                latest.loc[latest["station_key"] == k, "DisplayName"].values[0]
+                if k in latest["station_key"].values else k
+                for k in chart_df.columns
+            ]
+            st.line_chart(chart_df)
